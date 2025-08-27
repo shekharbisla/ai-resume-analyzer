@@ -3,3 +3,4 @@ pypdf2
 python-docx
 scikit-learn
 numpy
+pandas
