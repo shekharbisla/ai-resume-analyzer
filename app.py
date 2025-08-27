@@ -1,64 +1,63 @@
-# app.py
 import streamlit as st
+from io import BytesIO
 from src.parser import read_pdf, read_docx
-from src.scorer import similarity_and_gaps, bullet_suggestions
+from src.analyzer import analyze
 
-st.set_page_config(page_title="AI Resume Analyzer", page_icon="🧠", layout="centered")
-st.title("🧠 AI Resume Analyzer")
-st.caption("Upload your resume (PDF/DOCX) and paste a Job Description to get a quick match score and suggestions.")
+st.set_page_config(page_title="AI Resume Analyzer", page_icon="🤖", layout="centered")
 
-# --- Inputs
-uploaded = st.file_uploader("Upload Resume (PDF or DOCX)", type=["pdf", "docx"])
-jd_text = st.text_area("Paste Job Description", height=220, placeholder="Paste the JD here...")
-
-def extract_text(file) -> str:
-    name = (file.name or "").lower()
-    data = file.read()
-    if name.endswith(".pdf"):
-        return read_pdf(data)
-    if name.endswith(".docx"):
-        return read_docx(data)
-    raise ValueError("Unsupported file type")
+st.title("🤖 AI Resume Analyzer")
+st.write("Upload your **Resume (PDF/DOCX)** and paste the **Job Description** to get a match score, missing skills, and improvement tips.")
 
 col1, col2 = st.columns(2)
-analyze = col1.button("🔍 Analyze")
-reset = col2.button("♻️ Clear")
+with col1:
+    resume_file = st.file_uploader("Upload Resume (PDF or DOCX)", type=["pdf", "docx"])
+with col2:
+    file_type = st.selectbox("Resume Type", ["pdf", "docx"])
 
-if reset:
-    st.experimental_rerun()
+job_desc = st.text_area("Paste Job Description", height=180, placeholder="Paste the JD here...")
 
-if analyze:
-    if not uploaded or not jd_text.strip():
-        st.warning("Please upload a resume and paste the JD.")
+if st.button("Analyze Resume", type="primary"):
+    if not resume_file or not job_desc.strip():
+        st.error("Please upload a resume and paste a job description.")
     else:
+        bytes_data = resume_file.read()
         try:
-            resume_text = extract_text(uploaded)
-            res = similarity_and_gaps(resume_text, jd_text)
-            st.subheader("Results")
-            m1, m2 = st.columns(2)
-            m1.metric("Similarity", f"{res['similarity']}%")
-            m2.metric("Keyword Coverage", f"{res['coverage']}%")
-
-            with st.expander("✅ Present keywords"):
-                st.write(", ".join(res["present_keywords"]) or "—")
-
-            with st.expander("❌ Missing keywords (add to resume if true)"):
-                st.write(", ".join(res["missing_keywords"]) or "—")
-
-            st.subheader("Suggested bullets to add")
-            for b in bullet_suggestions(res["missing_keywords"]):
-                st.markdown(f"- {b}")
-
-            # Downloadable summary
-            summary = [
-                "AI Resume Analyzer Report",
-                f"Similarity: {res['similarity']}%",
-                f"Keyword coverage: {res['coverage']}%",
-                f"Present keywords: {', '.join(res['present_keywords'])}",
-                f"Missing keywords: {', '.join(res['missing_keywords'])}",
-            ]
-            st.download_button("⬇️ Download report (.txt)",
-                               "\n".join(summary),
-                               file_name="resume_report.txt")
+            if file_type == "pdf":
+                resume_text = read_pdf(bytes_data)
+            else:
+                resume_text = read_docx(bytes_data)
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Couldn't read the file: {e}")
+            st.stop()
+
+        result = analyze(resume_text, job_desc)
+
+        st.subheader("🔢 Match Score")
+        st.metric("Keyword Coverage", f"{result['coverage']['score']}%")
+
+        st.subheader("✅ Skills Match")
+        st.write("**Overlap:** ", ", ".join(result["skills_overlap"]) or "–")
+        st.write("**Missing (from JD):** ", ", ".join(result["skills_missing"]) or "–")
+
+        with st.expander("🔍 Keywords found from JD"):
+            st.write(", ".join(result["coverage"]["found"]) or "–")
+
+        with st.expander("🧩 Keywords missing from JD (top)"):
+            st.write(", ".join(result["coverage"]["missing"]) or "–")
+
+        st.subheader("🛠️ Quick Tips")
+        for t in (result["tips"] or ["Looks good! Make sure keywords appear in measurable bullet points."]):
+            st.write("•", t)
+
+        # Downloadable report
+        report = f"""AI Resume Analyzer Report
+
+Score: {result['coverage']['score']}%
+Overlap Skills: {", ".join(result['skills_overlap'])}
+Missing Skills: {", ".join(result['skills_missing'])}
+
+Tips:
+- """ + "\n- ".join(result["tips"] or ["Looks good!"])
+
+        st.download_button("⬇️ Download Report (.txt)", data=report.encode("utf-8"),
+                           file_name="resume_report.txt", mime="text/plain")
