@@ -1,3 +1,5 @@
 streamlit
-PyPDF2
+pypdf2
 python-docx
+scikit-learn
+numpy
