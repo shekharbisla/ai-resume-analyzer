@@ -1,3 +1,6 @@
+# --- Fix for imports when deploying on Streamlit ---
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 # app.py
 # AI Resume Analyzer – Streamlit UI
 # ---------------------------------
