@@ -1,6 +1,7 @@
 streamlit
-pypdf2
 python-docx
+PyPDF2
 scikit-learn
 numpy
 pandas
+nltk
