@@ -1,4 +1,3 @@
-# src/parser.py
 from io import BytesIO
 import PyPDF2
 from docx import Document
