@@ -1,130 +1,147 @@
-# app.py
+# app.py  (root में)
 from __future__ import annotations
-
-# Make ./src importable on Streamlit Cloud
-import os, sys
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR = os.path.join(ROOT_DIR, "src")
-if SRC_DIR not in sys.path:
-    sys.path.insert(0, SRC_DIR)
 
 from datetime import datetime
 from typing import List
+
 import streamlit as st
 
-from parser import read_pdf, read_docx
-from utils import clean_text, extract_keywords
-from scorer import score_resume
-from analyzer import keyword_gaps
+# ---- हमारी src/ helper files से imports (namespace के साथ) ----
+from src.parser import read_pdf, read_docx
+from src.utils import clean_text, extract_keywords
+from src.scorer import score_resume
+from src.analyzer import keyword_gaps
 
+# ---------------- UI CONFIG ----------------
 st.set_page_config(page_title="AI Resume Analyzer", page_icon="🧠", layout="centered")
-st.title("🧠 AI Resume Analyzer")
-st.caption("Upload your resume + job description → get a match score, keyword gaps and quick suggestions.")
 
-ALLOWED = ["pdf", "docx", "txt"]
-
+# --------------- HELPERS -------------------
 def read_any(file) -> str:
     if file is None:
         return ""
     data = file.read()
     name = (file.name or "").lower()
-    if name.endswith(".pdf"):
-        return read_pdf(data)
-    if name.endswith(".docx"):
-        return read_docx(data)
-    if name.endswith(".txt"):
-        return data.decode("utf-8", errors="ignore")
-    raise ValueError("Please upload PDF, DOCX or TXT")
+    mime = (file.type or "").lower()
 
-def bullet(items: List[str]) -> str:
+    if "pdf" in mime or name.endswith(".pdf"):
+        return read_pdf(data)
+    if "word" in mime or name.endswith(".docx"):
+        return read_docx(data)
+    if "text" in mime or name.endswith(".txt"):
+        try:
+            return data.decode("utf-8", errors="ignore")
+        except Exception:
+            return data.decode("latin-1", errors="ignore")
+    raise ValueError("Unsupported file type. Please use PDF, DOCX, or TXT.")
+
+def to_lines(items: List[str]) -> str:
     return "\n".join(f"• {x}" for x in items)
 
-def make_report(resume_text, jd_text, score, matched, missing, suggestions) -> str:
+def make_report(resume_text: str, jd_text: str, score: float,
+                matched: List[str], missing: List[str],
+                suggestions: List[str]) -> str:
     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return f"""AI Resume Analyzer Report
 Generated: {ts}
 
-Score: {score} / 100
+Overall Match Score: {round(score, 1)} / 100
 
-Matched:
-{bullet(matched) or "—"}
+=== Matched Keywords ===
+{to_lines(matched) or "—"}
 
-Missing:
-{bullet(missing) or "—"}
+=== Missing / Low-Coverage Keywords ===
+{to_lines(missing) or "—"}
 
-Suggestions:
-{bullet(suggestions) or "—"}
+=== Suggestions ===
+{to_lines(suggestions) or "—"}
 """
 
+# ------------------- SIDEBAR ----------------
 with st.sidebar:
-    st.markdown("## How to use")
-    st.write("1) Upload Resume (PDF/DOCX/TXT)")
-    st.write("2) Upload or paste Job Description")
-    st.write("3) Click **Analyze** → Download report")
+    st.markdown("## ⚙️ How to use")
+    st.markdown(
+        "1) Upload your **Resume** (PDF/DOCX/TXT)\n"
+        "2) Paste or upload the **Job Description**\n"
+        "3) Click **Analyze**\n"
+        "4) Download the report"
+    )
+    st.caption("Tip: Tailor each resume to the JD for a higher score.")
+
+# ------------------- MAIN UI ----------------
+st.title("🧠 AI Resume Analyzer")
+st.caption("Match resume to JD, see keyword gaps, and quick suggestions.")
 
 col1, col2 = st.columns(2)
 with col1:
-    resume_file = st.file_uploader("Upload Resume", type=ALLOWED)
+    resume_file = st.file_uploader("Upload Resume (PDF / DOCX / TXT)",
+                                   type=["pdf", "docx", "txt"])
 with col2:
-    jd_file = st.file_uploader("Upload JD (optional)", type=ALLOWED)
+    jd_file = st.file_uploader("Optional: Upload JD (PDF / DOCX / TXT)",
+                               type=["pdf", "docx", "txt"])
 
-jd_text_input = st.text_area("…or paste Job Description", height=200, placeholder="Paste the JD here…")
-analyze = st.button("🔍 Analyze", use_container_width=True)
+jd_text_input = st.text_area("Or paste Job Description here", height=220)
 
-if analyze:
+if st.button("🔍 Analyze", use_container_width=True):
     if not resume_file:
-        st.error("Please upload your Resume first."); st.stop()
+        st.error("Please upload your **Resume** first.")
+        st.stop()
 
     try:
-        resume_raw = read_any(resume_file)
+        raw_resume = read_any(resume_file)
     except Exception as e:
-        st.error(f"Could not read resume: {e}"); st.stop()
+        st.error(f"Could not read resume: {e}")
+        st.stop()
 
-    jd_raw = ""
+    raw_jd = ""
     if jd_file:
         try:
-            jd_raw = read_any(jd_file)
+            raw_jd = read_any(jd_file)
         except Exception as e:
-            st.error(f"Could not read JD: {e}"); st.stop()
-    if not jd_raw and not jd_text_input.strip():
-        st.error("Please add a JD (upload or paste)."); st.stop()
-    if not jd_raw:
-        jd_raw = jd_text_input
+            st.error(f"Could not read JD: {e}")
+            st.stop()
+    if not raw_jd:
+        raw_jd = jd_text_input
+
+    if not raw_jd.strip():
+        st.error("Please add a **Job Description** (upload or paste).")
+        st.stop()
 
     with st.spinner("Analyzing…"):
-        resume_text = clean_text(resume_raw)
-        jd_text = clean_text(jd_raw)
-
+        resume_text = clean_text(raw_resume)
+        jd_text = clean_text(raw_jd)
         jd_keywords = extract_keywords(jd_text, top_n=40)
         matched, missing = keyword_gaps(resume_text, jd_keywords)
         score = score_resume(resume_text, jd_text, matched, missing)
 
         suggestions: List[str] = []
         if missing:
-            suggestions.append(f"Add missing keywords (only if true): {', '.join(missing[:10])}")
+            suggestions.append(f"Add context for: {', '.join(missing[:10])}")
         if len(matched) < 10:
-            suggestions.append("Use more action verbs and measurable outcomes.")
-        suggestions.append("Mirror exact phrases from the JD in relevant bullets.")
-        suggestions.append("Put the most relevant skills in the top section.")
+            suggestions.append("Highlight outcomes with metrics (%, $, time).")
+        suggestions.append("Mirror true JD phrases in your bullets.")
+        suggestions.append("Surface the most relevant skills near the top.")
 
-    st.success("✅ Analysis complete!")
-    st.metric("Overall Score", f"{score} / 100")
+    st.success("Analysis complete!")
+    st.subheader("Overall Match")
+    st.metric("Score", f"{round(score, 1)} / 100")
+    st.progress(min(max(score / 100.0, 0.0), 1.0))
 
     c1, c2 = st.columns(2)
     with c1:
-        st.subheader("✅ Matched")
+        st.markdown("#### ✅ Matched")
         st.write(", ".join(matched) if matched else "—")
     with c2:
-        st.subheader("❌ Missing")
+        st.markdown("#### ❗ Missing")
         st.write(", ".join(missing) if missing else "—")
 
-    st.subheader("💡 Suggestions")
+    st.markdown("#### 💡 Suggestions")
     for s in suggestions:
         st.write(f"- {s}")
 
-    report = make_report(resume_text, jd_text, score, matched, missing, suggestions)
-    st.download_button("📄 Download Report", report.encode("utf-8"),
-                       file_name="resume_analysis.txt", mime="text/plain",
-                       use_container_width=True)
-
-st.caption("Built with Streamlit. Always tailor your resume truthfully to each role.")
+    st.download_button(
+        "📄 Download Analysis Report (TXT)",
+        data=make_report(resume_text, jd_text, score, matched, missing, suggestions).encode("utf-8"),
+        file_name="resume_analysis.txt",
+        mime="text/plain",
+        use_container_width=True,
+    )
