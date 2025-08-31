@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from .utils import clean_text
+from utils import clean_text
 
 def keyword_gaps(resume_text: str, jd_keywords: List[str]) -> Tuple[List[str], List[str]]:
     """Return (matched, missing) keywords from the JD w.r.t resume."""
