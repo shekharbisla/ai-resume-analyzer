@@ -4,3 +4,6 @@ python-docx
 scikit-learn
 numpy
 pandas
+matplotlib
+plotly
+wordcloud
