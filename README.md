@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="logo.png" alt="AI Resume Analyzer Logo" width="200"/>
+</p>
 # 🧠 AI Resume Analyzer  
 
 An **AI-powered open-source tool** that analyzes your resume against any Job Description.  
