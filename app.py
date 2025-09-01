@@ -9,12 +9,12 @@ import plotly.graph_objects as go
 from src.parser import read_pdf, read_docx
 from src.utils import clean_text, extract_keywords
 from src.scorer import score_resume
-from src.analyzer import keyword_gaps
+from src.analyzer import keyword_gaps, default_suggestions
 
 # ---------------- UI CONFIG ----------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
-    page_icon="logo.png",   # <- our logo
+    page_icon="logo.png",
     layout="centered",
 )
 
@@ -26,15 +26,9 @@ theme_choice = st.sidebar.radio("🎨 Theme", ["dark", "light"])
 st.session_state.theme = theme_choice
 
 if st.session_state.theme == "dark":
-    st.markdown(
-        "<style>body { background-color: #0e1117; color: white; }</style>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("<style>body { background-color: #0e1117; color: white; }</style>", unsafe_allow_html=True)
 else:
-    st.markdown(
-        "<style>body { background-color: #ffffff; color: black; }</style>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("<style>body { background-color: #ffffff; color: black; }</style>", unsafe_allow_html=True)
 
 # ------------------- HEADER ----------------
 col1, col2 = st.columns([1, 5])
@@ -57,7 +51,10 @@ with st.sidebar:
     st.divider()
     st.caption("Tip: Use a tailored resume for each JD to improve your score.")
 
-# --------------- SMALL HELPERS -------------
+# Debug Mode option
+show_debug = st.sidebar.checkbox("🔍 Debug Mode (show extracted keywords)")
+
+# --------------- HELPERS -------------
 def read_any(file) -> str:
     if file is None:
         return ""
@@ -99,7 +96,6 @@ with col2:
     jd_file = st.file_uploader("Optional: Upload JD", type=["pdf", "docx", "txt"])
 
 jd_text_input = st.text_area("Or paste Job Description here", height=200)
-
 analyze_btn = st.button("🔍 Analyze", use_container_width=True)
 
 # ----------------- ANALYZE FLOW -------------
@@ -122,13 +118,7 @@ if analyze_btn:
         jd_keywords = extract_keywords(jd_text, top_n=40)
         matched, missing = keyword_gaps(resume_text, jd_keywords)
         score = score_resume(resume_text, jd_text, matched, missing)
-
-        suggestions: List[str] = []
-        if missing:
-            suggestions.append(f"Add context for missing keywords: {', '.join(missing[:10])}")
-        if len(matched) < 10:
-            suggestions.append("Highlight outcomes with metrics (%, $, time saved).")
-        suggestions.append("Mirror key phrases from the JD in your resume where true.")
+        suggestions = default_suggestions(matched, missing)
 
     # ---------------- RESULTS TABS ----------------
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Score", "✅ Matched", "❗ Missing", "💡 Suggestions"])
@@ -172,6 +162,13 @@ if analyze_btn:
         st.subheader("Suggestions")
         for s in suggestions:
             st.info(s)
+
+    # Debug Info
+    if show_debug:
+        st.markdown("### Debug Info")
+        st.write("**Extracted JD Keywords:**", jd_keywords)
+        st.write("**Matched:**", matched)
+        st.write("**Missing:**", missing)
 
     # Report Download
     report_text = make_report(resume_text, jd_text, score, matched, missing, suggestions)
