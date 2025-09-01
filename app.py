@@ -1,3 +1,5 @@
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 import streamlit as st
 from datetime import datetime
 from typing import List
