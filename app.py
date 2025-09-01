@@ -1,7 +1,6 @@
-from src.resume_parser import parse_resume
-import json
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+
 import streamlit as st
 from datetime import datetime
 from typing import List
@@ -10,10 +9,11 @@ from wordcloud import WordCloud
 import plotly.graph_objects as go
 
 # ---- Project imports ----
-from analyzer import keyword_gaps, default_suggestions
-from utils import clean_text, extract_keywords
-from scorer import score_resume
-from parser import read_pdf, read_docx
+from src.analyzer import keyword_gaps, default_suggestions
+from src.utils import clean_text, extract_keywords
+from src.scorer import score_resume
+from src.parser import read_pdf, read_docx
+
 # ---------------- UI CONFIG ----------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -28,10 +28,53 @@ if "theme" not in st.session_state:
 theme_choice = st.sidebar.radio("🎨 Theme", ["dark", "light"])
 st.session_state.theme = theme_choice
 
-if st.session_state.theme == "dark":
-    st.markdown("<style>body { background-color: #0e1117; color: white; }</style>", unsafe_allow_html=True)
-else:
-    st.markdown("<style>body { background-color: #ffffff; color: black; }</style>", unsafe_allow_html=True)
+def apply_theme():
+    if st.session_state.theme == "dark":
+        st.markdown(
+            """
+            <style>
+            body, .stApp {
+                background-color: #0e1117;
+                color: #f8f9fa;
+            }
+            .debug-card {
+                background: linear-gradient(135deg, #1e1e2e, #121212);
+                border: 1px solid #333;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 20px;
+                color: #f8f9fa;
+                box-shadow: 0px 4px 15px rgba(0,0,0,0.6);
+            }
+            h4 { color: #FFD700; }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <style>
+            body, .stApp {
+                background-color: #f8f9fa;
+                color: #212529;
+            }
+            .debug-card {
+                background: linear-gradient(135deg, #ffffff, #f1f1f1);
+                border: 1px solid #ddd;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 20px;
+                color: #212529;
+                box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+            }
+            h4 { color: #0d6efd; }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+apply_theme()
 
 # ------------------- HEADER ----------------
 col1, col2 = st.columns([1, 5])
@@ -40,7 +83,7 @@ with col1:
 with col2:
     st.title("AI Resume Analyzer")
 
-st.caption("Match your resume to a Job Description, see keyword gaps, and get suggestions.")
+st.caption("Match your resume to a Job Description, see keyword gaps, and get smart suggestions.")
 
 # ------------------- SIDEBAR ----------------
 with st.sidebar:
@@ -49,13 +92,14 @@ with st.sidebar:
         "1) Upload your **Resume** (PDF/DOCX/TXT)\n"
         "2) Paste or upload the **Job Description**\n"
         "3) Click **Analyze** to see score & gaps\n"
-        "4) Download the report and improve your resume"
+        "4) Download the report\n\n"
+        "✨ Founder: Bisla ji"
     )
     st.divider()
     st.caption("Tip: Use a tailored resume for each JD to improve your score.")
 
 # Debug Mode option
-show_debug = st.sidebar.checkbox("🔍 Debug Mode (show extracted keywords)")
+show_debug = st.sidebar.checkbox("🔍 Debug Mode")
 
 # --------------- HELPERS -------------
 def read_any(file) -> str:
@@ -126,7 +170,6 @@ if analyze_btn:
     # ---------------- RESULTS TABS ----------------
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Score", "✅ Matched", "❗ Missing", "💡 Suggestions"])
 
-    # Score Tab
     with tab1:
         st.subheader("Overall Match")
         fig = go.Figure(go.Indicator(
@@ -138,7 +181,6 @@ if analyze_btn:
         ))
         st.plotly_chart(fig, use_container_width=True)
 
-    # Matched Keywords Tab
     with tab2:
         st.subheader("Matched Keywords")
         if matched:
@@ -149,7 +191,6 @@ if analyze_btn:
         else:
             st.write("—")
 
-    # Missing Keywords Tab
     with tab3:
         st.subheader("Missing Keywords")
         if missing:
@@ -160,18 +201,22 @@ if analyze_btn:
         else:
             st.write("—")
 
-    # Suggestions Tab
     with tab4:
         st.subheader("Suggestions")
         for s in suggestions:
             st.info(s)
 
-    # Debug Info
+    # ---------------- DEBUG INFO ----------------
     if show_debug:
-        st.markdown("### Debug Info")
-        st.write("**Extracted JD Keywords:**", jd_keywords)
-        st.write("**Matched:**", matched)
-        st.write("**Missing:**", missing)
+        st.subheader("🛠️ Debug Info")
+
+        def debug_card(title, content):
+            st.markdown(f"<div class='debug-card'><h4>{title}</h4>", unsafe_allow_html=True)
+            st.json(content)
+
+        debug_card("📌 Extracted JD Keywords", jd_keywords)
+        debug_card("✅ Matched Keywords", matched)
+        debug_card("❗ Missing Keywords", missing)
 
     # Report Download
     report_text = make_report(resume_text, jd_text, score, matched, missing, suggestions)
@@ -185,4 +230,10 @@ if analyze_btn:
 
 # ----------------- FOOTER -------------------
 st.divider()
-st.caption("Built with Streamlit. Always tailor your resume truthfully to the role.")
+st.markdown(
+    "<p style='text-align:center; font-size:14px;'>"
+    "🚀 Built with ❤️ using Streamlit | © 2025 AI Resume Analyzer<br>"
+    "Crafted by <b>Bisla ji</b> | <a href='https://github.com/shekharbisla' target='_blank'>GitHub</a>"
+    "</p>",
+    unsafe_allow_html=True,
+)
