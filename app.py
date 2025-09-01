@@ -1,3 +1,5 @@
+from src.resume_parser import parse_resume
+import json
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 import streamlit as st
