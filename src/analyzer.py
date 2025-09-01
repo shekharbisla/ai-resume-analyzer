@@ -1,4 +1,4 @@
-from src.utils import clean_text
+from .utils import clean_text
 
 def keyword_gaps(resume_text: str, jd_keywords: list[str]) -> tuple[list[str], list[str]]:
     """
