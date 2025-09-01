@@ -8,11 +8,10 @@ from wordcloud import WordCloud
 import plotly.graph_objects as go
 
 # ---- Project imports ----
-from src.parser import read_pdf, read_docx
-from src.utils import clean_text, extract_keywords
-from src.scorer import score_resume
-from src.analyzer import keyword_gaps, default_suggestions
-
+from analyzer import keyword_gaps, default_suggestions
+from utils import clean_text, extract_keywords
+from scorer import score_resume
+from parser import read_pdf, read_docx
 # ---------------- UI CONFIG ----------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
