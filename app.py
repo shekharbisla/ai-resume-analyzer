@@ -1,3 +1,13 @@
+import nltk
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt")
+
+try:
+    nltk.data.find("corpora/stopwords")
+except LookupError:
+    nltk.download("stopwords")
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
