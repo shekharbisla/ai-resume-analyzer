@@ -1,17 +1,19 @@
-from typing import List
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+def score_resume(resume_text: str, jd_text: str, matched: list[str], missing: list[str]) -> float:
+    """
+    Stable scoring:
+    Score = % coverage of JD keywords in Resume.
+    Always between 0 and 100.
+    """
+    total_keywords = len(matched) + len(missing)
+    if total_keywords == 0:
+        return 0.0
 
-def _tfidf_sim(a: str, b: str) -> float:
-    vec = TfidfVectorizer(stop_words="english", ngram_range=(1,2), min_df=1)
-    X = vec.fit_transform([a or "", b or ""])
-    return float(cosine_similarity(X[0], X[1])[0][0])  # 0..1
+    # Percentage coverage
+    coverage = len(matched) / total_keywords
 
-def score_resume(resume_text: str, jd_text: str, matched: List[str], missing: List[str]) -> float:
-    """Blend of keyword overlap and TF-IDF cosine → return 0..100."""
-    total = max(len(matched) + len(missing), 1)
-    overlap = len(matched) / total  # 0..1
-    sim = _tfidf_sim((resume_text or ""), (jd_text or ""))  # 0..1
-    # weights: 60% overlap, 40% semantic sim
-    raw = 0.6 * overlap + 0.4 * sim
-    return round(max(0.0, min(1.0, raw)) * 100, 1)
+    # More realistic scoring: small bonus if resume has >20 keywords
+    length_bonus = 0.05 if len(resume_text.split()) > 20 else 0.0
+
+    score = (coverage + length_bonus) * 100
+
+    return round(min(score, 100.0), 1)
