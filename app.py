@@ -36,73 +36,82 @@ st.set_page_config(
 # ---------------- CUSTOM CSS ----------------
 page_bg = """
 <style>
-/* Background Gradient */
+/* Background with premium wallpaper + gradient overlay */
 .stApp {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
+    background: linear-gradient(rgba(15,32,39,0.88), rgba(44,83,100,0.88)),
+                url("https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1600&q=80");
+    background-size: cover;
+    background-position: center;
     font-family: 'Poppins', sans-serif;
+    color: white;
 }
 
-/* Card Style */
-.reportview-container .main .block-container {
-    background-color: rgba(255,255,255,0.05);
+/* Container (glass effect) */
+.block-container {
+    background: rgba(255, 255, 255, 0.06);
     padding: 2rem;
     border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    box-shadow: 0px 6px 25px rgba(0,0,0,0.5);
+}
+
+/* Logo sharpness fix */
+.logo-img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90px;
+    height: auto;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+/* Title */
+h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    text-align: center;
+    background: -webkit-linear-gradient(45deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: -10px;
 }
 
 /* Buttons */
 .stButton>button {
-    background: #4CAF50;
-    color: white;
-    font-size: 16px;
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    transition: 0.3s;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    color: black;
+    font-weight: bold;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0.7rem 1.5rem;
+    transition: all 0.3s ease-in-out;
+    border: none;
 }
 .stButton>button:hover {
-    background: #45a049;
+    transform: scale(1.07);
+    background: linear-gradient(90deg, #FFA500, #FFD700);
 }
 
 /* Tabs */
 .stTabs [role="tablist"] button {
     font-size: 16px;
-    padding: 10px 20px;
+    padding: 8px 20px;
+    font-weight: 600;
 }
 </style>
 """
-
 st.markdown(page_bg, unsafe_allow_html=True)
 
-# ---------------- THEME TOGGLE ----------------
-if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
-
-theme_choice = st.sidebar.radio("🎨 Theme", ["dark", "light"])
-st.session_state.theme = theme_choice
-
-if st.session_state.theme == "dark":
-    st.markdown(
-        "<style> .stApp { background-color: #0e1117; color: white; } </style>",
-        unsafe_allow_html=True
-    )
-else:
-    st.markdown(
-        "<style> .stApp { background-color: #ffffff; color: black; } </style>",
-        unsafe_allow_html=True
-    )
-
 # ------------------- HEADER ----------------
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.image("logo.png", width=60)
-with col2:
-    st.title("AI Resume Analyzer")
-
-st.caption("Match your resume to a Job Description, see keyword gaps, and get suggestions.")
+st.markdown('<img src="logo.png" class="logo-img">', unsafe_allow_html=True)
+st.markdown("<h1>🚀 AI Resume Analyzer</h1>", unsafe_allow_html=True)
+st.caption("⚡ Crafted by Bisla Ji | Analyze • Improve • Get Hired")
 
 # ------------------- SIDEBAR ----------------
 with st.sidebar:
+    st.image("logo.png", width=60)
+    st.markdown("### ⚡ AI Resume Analyzer v2.0")
+    st.caption("Crafted with ❤️ by **Bisla Ji**")
+    st.markdown("---")
     st.markdown("## ⚙️ How to use")
     st.markdown(
         "1) Upload your **Resume** (PDF/DOCX/TXT)\n"
@@ -111,7 +120,7 @@ with st.sidebar:
         "4) Download the report and improve your resume"
     )
     st.divider()
-    st.caption("Tip: Use a tailored resume for each JD to improve your score.")
+    st.caption("💡 Pro Tip: Use a tailored resume for each JD to improve your score.")
 
 # Debug Mode option
 show_debug = st.sidebar.checkbox("🔍 Debug Mode (show extracted data)")
@@ -227,7 +236,7 @@ if analyze_btn:
 
     # Debug Info
     if show_debug:
-        st.markdown("### Debug Info")
+        st.markdown("### 🛠️ Debug Info")
         st.json({
             "JD Keywords": jd_keywords,
             "Matched": matched,
@@ -246,4 +255,4 @@ if analyze_btn:
 
 # ----------------- FOOTER -------------------
 st.divider()
-st.caption("⚡ Built with Streamlit | Crafted by Bisla ji | Always tailor your resume truthfully to the role.")
+st.caption("⚡ Built with Streamlit | ✨ Premium UI | Crafted by Bisla Ji | Always tailor your resume truthfully to the role.")
