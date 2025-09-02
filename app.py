@@ -41,9 +41,15 @@ theme_choice = st.sidebar.radio("🎨 Theme", ["dark", "light"])
 st.session_state.theme = theme_choice
 
 if st.session_state.theme == "dark":
-    st.markdown("<style>body { background-color: #0e1117; color: white; }</style>", unsafe_allow_html=True)
+    st.markdown(
+        "<style> .stApp { background-color: #0e1117; color: white; } </style>",
+        unsafe_allow_html=True
+    )
 else:
-    st.markdown("<style>body { background-color: #ffffff; color: black; }</style>", unsafe_allow_html=True)
+    st.markdown(
+        "<style> .stApp { background-color: #ffffff; color: black; } </style>",
+        unsafe_allow_html=True
+    )
 
 # ------------------- HEADER ----------------
 col1, col2 = st.columns([1, 5])
