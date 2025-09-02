@@ -33,6 +33,47 @@ st.set_page_config(
     layout="centered",
 )
 
+# ---------------- CUSTOM CSS ----------------
+page_bg = """
+<style>
+/* Background Gradient */
+.stApp {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Card Style */
+.reportview-container .main .block-container {
+    background-color: rgba(255,255,255,0.05);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* Buttons */
+.stButton>button {
+    background: #4CAF50;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    transition: 0.3s;
+}
+.stButton>button:hover {
+    background: #45a049;
+}
+
+/* Tabs */
+.stTabs [role="tablist"] button {
+    font-size: 16px;
+    padding: 10px 20px;
+}
+</style>
+"""
+
+st.markdown(page_bg, unsafe_allow_html=True)
+
 # ---------------- THEME TOGGLE ----------------
 if "theme" not in st.session_state:
     st.session_state.theme = "dark"
