@@ -33,73 +33,50 @@ st.set_page_config(
     layout="centered",
 )
 
-# ---------------- CUSTOM CSS ----------------
 page_bg = """
 <style>
-/* Background with premium wallpaper + gradient overlay */
+/* Background Gradient */
 .stApp {
-    background: linear-gradient(rgba(15,32,39,0.88), rgba(44,83,100,0.88)),
-                url("https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1600&q=80");
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     font-family: 'Poppins', sans-serif;
-    color: white;
+    color: #f5f5f5; /* Default text light */
 }
 
-/* Container (glass effect) */
-.block-container {
-    background: rgba(255, 255, 255, 0.06);
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0px 6px 25px rgba(0,0,0,0.5);
+/* Headings ko highlight */
+h1, h2, h3, h4 {
+    color: #FFD700 !important; /* Golden headings */
 }
 
-/* Logo sharpness fix */
-.logo-img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 90px;
-    height: auto;
-    image-rendering: -webkit-optimize-contrast;
-}
-
-/* Title */
-h1 {
-    font-size: 2.4rem;
-    font-weight: 700;
-    text-align: center;
-    background: -webkit-linear-gradient(45deg, #FFD700, #FFA500);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: -10px;
+/* Sidebar text */
+section[data-testid="stSidebar"] {
+    background: rgba(0,0,0,0.85);
+    color: #f5f5f5;
 }
 
 /* Buttons */
 .stButton>button {
-    background: linear-gradient(90deg, #FFD700, #FFA500);
-    color: black;
+    background: linear-gradient(90deg, #ffb347, #ffcc33);
+    color: black !important;
     font-weight: bold;
-    font-size: 15px;
-    border-radius: 10px;
-    padding: 0.7rem 1.5rem;
-    transition: all 0.3s ease-in-out;
-    border: none;
+    font-size: 16px;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    transition: 0.3s;
 }
 .stButton>button:hover {
-    transform: scale(1.07);
-    background: linear-gradient(90deg, #FFA500, #FFD700);
+    background: linear-gradient(90deg, #ffcc33, #ffb347);
+    color: white !important;
 }
 
-/* Tabs */
-.stTabs [role="tablist"] button {
-    font-size: 16px;
-    padding: 8px 20px;
-    font-weight: 600;
+/* Suggestions box (background blur + readable text) */
+.stAlert {
+    background: rgba(255,255,255,0.15) !important;
+    color: #ffffff !important;
+    border-radius: 10px;
+    padding: 1rem;
 }
 </style>
 """
-st.markdown(page_bg, unsafe_allow_html=True)
 
 # ------------------- HEADER ----------------
 st.markdown('<img src="logo.png" class="logo-img">', unsafe_allow_html=True)
