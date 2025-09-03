@@ -33,6 +33,55 @@ st.set_page_config(
     layout="centered",
 )
 
+# ---------------- CUSTOM CSS ----------------
+def set_background(theme="dark"):
+    if theme == "dark":
+        bg_color = "#0e1117"
+        text_color = "white"
+        bg_image = "bg.png"
+    else:
+        bg_color = "#ffffff"
+        text_color = "black"
+        bg_image = "bg_light.png"  # Optional: ek light version bana lo
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: url('{bg_image}');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: {text_color};
+        }}
+
+        h1, h2, h3, h4 {{
+            color: #FFD700 !important;
+        }}
+
+        section[data-testid="stSidebar"] {{
+            background: rgba(0,0,0,0.85);
+            color: white;
+        }}
+
+        .stButton>button {{
+            background: linear-gradient(90deg, #ffb347, #ffcc33);
+            color: black !important;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            transition: 0.3s;
+        }}
+        .stButton>button:hover {{
+            background: linear-gradient(90deg, #ffcc33, #ffb347);
+            color: white !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 # ---------------- CUSTOM STYLING ----------------
 page_bg = """
 <style>
