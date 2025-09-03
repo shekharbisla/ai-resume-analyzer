@@ -29,28 +29,38 @@ from src.parser import read_pdf, read_docx
 # ---------------- UI CONFIG ----------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
-    page_icon="logo.png",
+    page_icon="logo.png",  # use optimized small PNG
     layout="centered",
 )
 
+# ---------------- CUSTOM STYLING ----------------
 page_bg = """
 <style>
-/* Background Gradient */
+/* Background gradient */
 .stApp {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(135deg, #141e30, #243b55);
     font-family: 'Poppins', sans-serif;
-    color: #f5f5f5; /* Default text light */
-}
-
-/* Headings ko highlight */
-h1, h2, h3, h4 {
-    color: #FFD700 !important; /* Golden headings */
-}
-
-/* Sidebar text */
-section[data-testid="stSidebar"] {
-    background: rgba(0,0,0,0.85);
     color: #f5f5f5;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: rgba(20,20,20,0.95);
+    color: #f5f5f5;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    color: #FFD700 !important;
+    font-weight: 700;
+}
+
+/* Upload boxes contrast */
+.css-1cpxqw2, .stFileUploader, textarea {
+    background-color: rgba(255,255,255,0.9) !important;
+    color: black !important;
+    border-radius: 8px;
+    padding: 8px;
 }
 
 /* Buttons */
@@ -68,22 +78,34 @@ section[data-testid="stSidebar"] {
     color: white !important;
 }
 
-/* Suggestions box (background blur + readable text) */
+/* Tabs */
+.stTabs [role="tablist"] button {
+    font-size: 16px;
+    padding: 10px 20px;
+    font-weight: 600;
+}
+
+/* Suggestions box */
 .stAlert {
-    background: rgba(255,255,255,0.15) !important;
+    background: rgba(0,0,0,0.6) !important;
     color: #ffffff !important;
     border-radius: 10px;
     padding: 1rem;
 }
 </style>
 """
+st.markdown(page_bg, unsafe_allow_html=True)
 
-# ------------------- HEADER ----------------
-st.markdown('<img src="logo.png" class="logo-img">', unsafe_allow_html=True)
-st.markdown("<h1>🚀 AI Resume Analyzer</h1>", unsafe_allow_html=True)
+# ---------------- HEADER ----------------
+col1, col2 = st.columns([1, 6])
+with col1:
+    st.image("logo.png", width=70)
+with col2:
+    st.markdown("<h1>🚀 AI Resume Analyzer</h1>", unsafe_allow_html=True)
+
 st.caption("⚡ Crafted by Bisla Ji | Analyze • Improve • Get Hired")
 
-# ------------------- SIDEBAR ----------------
+# ---------------- SIDEBAR ----------------
 with st.sidebar:
     st.image("logo.png", width=60)
     st.markdown("### ⚡ AI Resume Analyzer v2.0")
@@ -102,7 +124,7 @@ with st.sidebar:
 # Debug Mode option
 show_debug = st.sidebar.checkbox("🔍 Debug Mode (show extracted data)")
 
-# --------------- HELPERS -------------
+# ---------------- HELPERS ----------------
 def read_any(file) -> str:
     if file is None:
         return ""
@@ -136,7 +158,7 @@ Overall Match Score: {round(score, 1)} / 100
 {to_lines(suggestions) or "—"}
 """
 
-# ------------------- MAIN UI ----------------
+# ---------------- MAIN UI ----------------
 col1, col2 = st.columns(2)
 with col1:
     resume_file = st.file_uploader("Upload Resume", type=["pdf", "docx", "txt"])
@@ -146,7 +168,7 @@ with col2:
 jd_text_input = st.text_area("Or paste Job Description here", height=200)
 analyze_btn = st.button("🔍 Analyze", use_container_width=True)
 
-# ----------------- ANALYZE FLOW -------------
+# ---------------- ANALYZE FLOW ----------------
 if analyze_btn:
     if not resume_file:
         st.error("Please upload your Resume file first.")
@@ -168,10 +190,9 @@ if analyze_btn:
         score = score_resume(resume_text, jd_text, matched, missing)
         suggestions = default_suggestions(matched, missing)
 
-    # ---------------- RESULTS TABS ----------------
+    # ---------------- RESULTS ----------------
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Score", "✅ Matched", "❗ Missing", "💡 Suggestions"])
 
-    # Score Tab
     with tab1:
         st.subheader("Overall Match")
         fig = go.Figure(go.Indicator(
@@ -183,7 +204,6 @@ if analyze_btn:
         ))
         st.plotly_chart(fig, use_container_width=True)
 
-    # Matched Keywords Tab
     with tab2:
         st.subheader("Matched Keywords")
         if matched:
@@ -194,7 +214,6 @@ if analyze_btn:
         else:
             st.write("—")
 
-    # Missing Keywords Tab
     with tab3:
         st.subheader("Missing Keywords")
         if missing:
@@ -205,13 +224,11 @@ if analyze_btn:
         else:
             st.write("—")
 
-    # Suggestions Tab
     with tab4:
         st.subheader("Suggestions")
         for s in suggestions:
             st.info(s)
 
-    # Debug Info
     if show_debug:
         st.markdown("### 🛠️ Debug Info")
         st.json({
@@ -220,7 +237,7 @@ if analyze_btn:
             "Missing": missing
         })
 
-    # Report Download
+    # Download button
     report_text = make_report(resume_text, jd_text, score, matched, missing, suggestions)
     st.download_button(
         "📄 Download Report",
@@ -230,6 +247,6 @@ if analyze_btn:
         use_container_width=True,
     )
 
-# ----------------- FOOTER -------------------
+# ---------------- FOOTER ----------------
 st.divider()
 st.caption("⚡ Built with Streamlit | ✨ Premium UI | Crafted by Bisla Ji | Always tailor your resume truthfully to the role.")
